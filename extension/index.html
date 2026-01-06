@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Counterfactual Command Center Extension</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api@v1.12.0/lib/tableau.extensions.1.latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="row" style="justify-content: space-between; margin: 0;">
+        <div>
+          <div class="title">Counterfactual Command Center</div>
+          <div class="subtitle">Decision regret in the flow of work.</div>
+        </div>
+        <div id="userInfo" class="subtitle" style="text-align: right;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="lbl">API Base URL</label>
+      <input id="apiBase" class="inp" placeholder="https://your-api.example" />
+      <div class="row">
+        <label class="chk"><input id="slackEnabled" type="checkbox" /> Enable Slack Trigger</label>
+        <button id="saveBtn" class="btn secondary">Save</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label class="lbl">Timing (days earlier)</label>
+          <select id="timing" class="inp">
+            <option value="0">0</option>
+            <option value="7">7</option>
+            <option value="14" selected>14</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+        <div class="col">
+          <label class="lbl">Action Type</label>
+          <select id="actionType" class="inp">
+            <option value="none">none</option>
+            <option value="discount">discount</option>
+            <option value="priority_support">priority_support</option>
+            <option value="proactive_outreach" selected>proactive_outreach</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="refreshBtn" class="btn">Refresh Top Regret</button>
+        <button id="triggerBtn" class="btn danger">Trigger Retention Action</button>
+      </div>
+
+      <div class="help">
+        Refresh loads top regret customers from your API. Trigger posts the top 5 to Slack (if enabled).
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Interactive Simulator</div>
+      <div id="simulatorControls" style="display: none;">
+        <div class="row">
+          <div class="col">
+            <label class="lbl">Usage Drop % (<span id="usageVal">0</span>%)</label>
+            <input type="range" id="usageSlider" min="0" max="100" value="0" class="slider" />
+          </div>
+          <div class="col">
+            <label class="lbl">Tickets (<span id="ticketVal">0</span>)</label>
+            <input type="range" id="ticketSlider" min="0" max="20" value="0" class="slider" />
+          </div>
+        </div>
+        <div id="simResult" class="selected-info" style="margin-top: 10px; border-left: 4px solid var(--btn);">
+          Adjust sliders to see real-time risk impact.
+        </div>
+      </div>
+      <div id="simPlaceholder" class="help">Select a customer to enable simulation.</div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Selected Customer Analysis</div>
+      <div id="selectedCustomer" class="selected-info">Select a customer in the dashboard to analyze.</div>
+      <div class="chart-container">
+        <canvas id="importanceChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Top Regret Customers</div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>customer_id</th>
+            <th>base_risk</th>
+            <th>cf_risk</th>
+            <th>delta</th>
+            <th>regret_$</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

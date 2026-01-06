@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://www.tableau.com/xml/extension_manifest" manifest-version="1.0">
+  <dashboard-extension id="com.partha.counterfactual.commandcenter" extension-version="1.0.0">
+    <default-locale>en_US</default-locale>
+    <name>Counterfactual Command Center</name>
+    <description>Counterfactual analysis for churn risk.</description>
+    <author name="Partha Sarathi Samal" email="psama0214@example.com" organization="Hackathon" website="https://example.com" />
+    <min-api-version>1.0</min-api-version>
+    <source-location>
+      <url>/extension/index.html</url>
+    </source-location>
+    <icon />
+    <permissions>
+      <permission>full data</permission>
+    </permissions>
+  </dashboard-extension>
+</manifest>
