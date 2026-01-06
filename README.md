@@ -13,54 +13,46 @@ A world-class, hackathon-grade end-to-end solution for Tableau Cloud + AI. This 
 
 ### Complete System Architecture
 ```mermaid
-graph TB
-    subgraph "Tableau Cloud"
+flowchart TB
+    subgraph Tableau["Tableau Cloud"]
         TC[Tableau Dashboard]
         DS[Published Data Source]
         EXT[Dashboard Extension]
     end
     
-    subgraph "Frontend - Extension UI"
+    subgraph Frontend["Frontend - Extension UI"]
         HTML[index.html]
-        JS[app.js - Extension Logic]
+        JS[app.js Extension Logic]
         CSS[styles.css]
         CHART[Chart.js Visualizations]
     end
     
-    subgraph "Backend - FastAPI Server"
+    subgraph Backend["Backend - FastAPI Server"]
         API[FastAPI Application]
-        CORS[CORS Middleware]
-        
-        subgraph "API Endpoints"
-            HEALTH[/health]
-            PREDICT[/predict]
-            EXPLAIN[/predict/explain]
-            CF[/counterfactual]
-            BATCH[/batch_counterfactual]
-            META[/metadata/features]
-            ACTION[/action/trigger]
-        end
-        
-        subgraph "Core Modules"
-            MODEL[model.py - ML Engine]
-            COUNTER[counterfactual.py - What-If Logic]
-            SCHEMA[schemas.py - Data Models]
-        end
+        HEALTH[Health Check]
+        PREDICT[Predict Endpoint]
+        EXPLAIN[Explain Endpoint]
+        CF[Counterfactual Endpoint]
+        BATCH[Batch Counterfactual]
+        META[Metadata Features]
+        ACTION[Action Trigger]
+        MODEL[model.py ML Engine]
+        COUNTER[counterfactual.py]
+        SCHEMA[schemas.py]
     end
     
-    subgraph "ML Pipeline"
+    subgraph ML["ML Pipeline"]
         TRAIN[Training Data Generator]
-        HGBOOST[HistGradientBoosting Model]
+        HGBOOST[HistGradientBoosting]
         FEATURES[Feature Importance]
     end
     
-    subgraph "External Services"
+    subgraph External["External Services"]
         SLACK[Slack Webhooks]
-        RENDER[Render.com Deployment]
     end
     
-    TC -->|Mark Selection Event| EXT
-    EXT -->|Tableau Extensions API| JS
+    TC -->|Mark Selection| EXT
+    EXT -->|Extensions API| JS
     JS -->|HTTP Requests| API
     
     API --> PREDICT
@@ -85,7 +77,7 @@ graph TB
     HGBOOST --> MODEL
     
     DS -.->|CSV Upload| TC
-    CHART -.->|Render Charts| JS
+    CHART -.->|Render| JS
     
     style TC fill:#2d6cdf,color:#fff
     style API fill:#22c55e,color:#fff
@@ -150,52 +142,40 @@ graph LR
 
 ### Frontend Extension Architecture
 ```mermaid
-graph TB
-    subgraph "Tableau Dashboard Extension"
+flowchart TB
+    subgraph Extension["Tableau Dashboard Extension"]
         INIT[Extension Initialization]
-        
-        subgraph "Event Listeners"
-            SEL[Mark Selection Listener]
-            SLIDE[Slider Input Listeners]
-            BTN[Button Click Handlers]
-        end
-        
-        subgraph "UI Components"
-            STATUS[Status Display]
-            CUST[Customer Info Panel]
-            SIM[What-If Simulator]
-            CHART[Feature Importance Chart]
-            TABLE[Top Regret Table]
-            CONFIG[Settings Panel]
-        end
-        
-        subgraph "API Integration"
-            FETCH1[/counterfactual]
-            FETCH2[/predict]
-            FETCH3[/metadata/features]
-            FETCH4[/batch_counterfactual]
-            FETCH5[/action/trigger]
-        end
-        
-        subgraph "Data Management"
-            STATE[Current Customer Data]
-            SETTINGS[Extension Settings]
-        end
+        SEL[Mark Selection Listener]
+        SLIDE[Slider Input Listeners]
+        BTN[Button Click Handlers]
+        STATUS[Status Display]
+        CUST[Customer Info Panel]
+        SIM[What-If Simulator]
+        CHART2[Feature Importance Chart]
+        TABLE[Top Regret Table]
+        CONFIG[Settings Panel]
+        FETCH1[API: Counterfactual]
+        FETCH2[API: Predict]
+        FETCH3[API: Metadata]
+        FETCH4[API: Batch]
+        FETCH5[API: Action]
+        STATE[Current Customer Data]
+        SETTINGS[Extension Settings]
     end
     
-    INIT -->|tableau.extensions.initializeAsync| SEL
+    INIT -->|initializeAsync| SEL
     INIT --> SETTINGS
     
     SEL -->|getMarksAsync| FETCH1
     SEL -->|getMarksAsync| FETCH3
     FETCH1 --> CUST
-    FETCH3 --> CHART
+    FETCH3 --> CHART2
     
     SLIDE -->|Real-time| FETCH2
     FETCH2 --> SIM
     
     BTN -->|Refresh| FETCH4
-    BTN -->|Trigger Action| FETCH5
+    BTN -->|Trigger| FETCH5
     FETCH4 --> TABLE
     
     STATE -.->|Store| CUST
@@ -204,7 +184,7 @@ graph TB
     style INIT fill:#2d6cdf,color:#fff
     style SEL fill:#22c55e,color:#fff
     style SIM fill:#f59e0b,color:#fff
-    style CHART fill:#8b5cf6,color:#fff
+    style CHART2 fill:#8b5cf6,color:#fff
 ```
 
 ## 🛠 Setup & Local Development
