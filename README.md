@@ -9,6 +9,204 @@ A world-class, hackathon-grade end-to-end solution for Tableau Cloud + AI. This 
 - **Deep Tableau Integration**: Listens to `MarkSelectionChanged` events. Selecting a customer bar in Tableau instantly triggers a counterfactual analysis for that specific individual.
 - **Actionable Analytics**: One-click "Trigger Retention Action" that posts high-regret customers directly to Slack via webhooks.
 
+## 🏗️ Architecture
+
+### Complete System Architecture
+```mermaid
+graph TB
+    subgraph "Tableau Cloud"
+        TC[Tableau Dashboard]
+        DS[Published Data Source]
+        EXT[Dashboard Extension]
+    end
+    
+    subgraph "Frontend - Extension UI"
+        HTML[index.html]
+        JS[app.js - Extension Logic]
+        CSS[styles.css]
+        CHART[Chart.js Visualizations]
+    end
+    
+    subgraph "Backend - FastAPI Server"
+        API[FastAPI Application]
+        CORS[CORS Middleware]
+        
+        subgraph "API Endpoints"
+            HEALTH[/health]
+            PREDICT[/predict]
+            EXPLAIN[/predict/explain]
+            CF[/counterfactual]
+            BATCH[/batch_counterfactual]
+            META[/metadata/features]
+            ACTION[/action/trigger]
+        end
+        
+        subgraph "Core Modules"
+            MODEL[model.py - ML Engine]
+            COUNTER[counterfactual.py - What-If Logic]
+            SCHEMA[schemas.py - Data Models]
+        end
+    end
+    
+    subgraph "ML Pipeline"
+        TRAIN[Training Data Generator]
+        HGBOOST[HistGradientBoosting Model]
+        FEATURES[Feature Importance]
+    end
+    
+    subgraph "External Services"
+        SLACK[Slack Webhooks]
+        RENDER[Render.com Deployment]
+    end
+    
+    TC -->|Mark Selection Event| EXT
+    EXT -->|Tableau Extensions API| JS
+    JS -->|HTTP Requests| API
+    
+    API --> PREDICT
+    API --> EXPLAIN
+    API --> CF
+    API --> BATCH
+    API --> META
+    API --> ACTION
+    
+    PREDICT --> MODEL
+    EXPLAIN --> MODEL
+    EXPLAIN --> FEATURES
+    CF --> MODEL
+    CF --> COUNTER
+    BATCH --> MODEL
+    BATCH --> COUNTER
+    META --> FEATURES
+    
+    ACTION --> SLACK
+    
+    TRAIN --> HGBOOST
+    HGBOOST --> MODEL
+    
+    DS -.->|CSV Upload| TC
+    CHART -.->|Render Charts| JS
+    
+    style TC fill:#2d6cdf,color:#fff
+    style API fill:#22c55e,color:#fff
+    style MODEL fill:#c2413b,color:#fff
+    style SLACK fill:#611f69,color:#fff
+```
+
+### Backend Architecture
+```mermaid
+graph LR
+    subgraph "FastAPI Backend (Port 8004)"
+        MAIN[main.py - Application Entry]
+        
+        subgraph "Request Handlers"
+            H1[Health Check]
+            H2[Prediction Engine]
+            H3[Explainability Engine]
+            H4[Counterfactual Engine]
+            H5[Batch Processing]
+            H6[Slack Integration]
+        end
+        
+        subgraph "Business Logic"
+            ML[model.py]
+            CF[counterfactual.py]
+            SC[schemas.py]
+        end
+        
+        subgraph "Data Layer"
+            CSV1[customers_base.csv]
+            CSV2[train_churn_synth.csv]
+            PKL[churn_model.pkl]
+        end
+    end
+    
+    CLIENT[Client Requests] -->|HTTP/JSON| MAIN
+    
+    MAIN --> H1
+    MAIN --> H2
+    MAIN --> H3
+    MAIN --> H4
+    MAIN --> H5
+    MAIN --> H6
+    
+    H2 --> ML
+    H3 --> ML
+    H4 --> ML
+    H4 --> CF
+    H5 --> ML
+    H5 --> CF
+    
+    ML --> PKL
+    ML --> CSV2
+    CF --> CSV1
+    
+    H6 -->|Webhook POST| SLACK[Slack API]
+    
+    style MAIN fill:#2d6cdf,color:#fff
+    style ML fill:#c2413b,color:#fff
+    style CF fill:#f59e0b,color:#fff
+```
+
+### Frontend Extension Architecture
+```mermaid
+graph TB
+    subgraph "Tableau Dashboard Extension"
+        INIT[Extension Initialization]
+        
+        subgraph "Event Listeners"
+            SEL[Mark Selection Listener]
+            SLIDE[Slider Input Listeners]
+            BTN[Button Click Handlers]
+        end
+        
+        subgraph "UI Components"
+            STATUS[Status Display]
+            CUST[Customer Info Panel]
+            SIM[What-If Simulator]
+            CHART[Feature Importance Chart]
+            TABLE[Top Regret Table]
+            CONFIG[Settings Panel]
+        end
+        
+        subgraph "API Integration"
+            FETCH1[/counterfactual]
+            FETCH2[/predict]
+            FETCH3[/metadata/features]
+            FETCH4[/batch_counterfactual]
+            FETCH5[/action/trigger]
+        end
+        
+        subgraph "Data Management"
+            STATE[Current Customer Data]
+            SETTINGS[Extension Settings]
+        end
+    end
+    
+    INIT -->|tableau.extensions.initializeAsync| SEL
+    INIT --> SETTINGS
+    
+    SEL -->|getMarksAsync| FETCH1
+    SEL -->|getMarksAsync| FETCH3
+    FETCH1 --> CUST
+    FETCH3 --> CHART
+    
+    SLIDE -->|Real-time| FETCH2
+    FETCH2 --> SIM
+    
+    BTN -->|Refresh| FETCH4
+    BTN -->|Trigger Action| FETCH5
+    FETCH4 --> TABLE
+    
+    STATE -.->|Store| CUST
+    STATE -.->|Update| SIM
+    
+    style INIT fill:#2d6cdf,color:#fff
+    style SEL fill:#22c55e,color:#fff
+    style SIM fill:#f59e0b,color:#fff
+    style CHART fill:#8b5cf6,color:#fff
+```
+
 ## 🛠 Setup & Local Development
 
 ### 1) Prerequisites
