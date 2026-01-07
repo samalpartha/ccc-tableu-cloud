@@ -21,7 +21,7 @@ async function init() {
     const defaultApi = window.location.origin;
     document.getElementById("apiBase").value = settings.get("apiBase") || defaultApi;
     document.getElementById("slackEnabled").checked = (settings.get("slackEnabled") || "false") === "true";
-    
+
     // Display User Info
     const user = tableau.extensions.viewer;
     if (user && user.name) {
@@ -56,13 +56,13 @@ async function onSelectionChange(event) {
   if (customerIdIndex === -1) return;
 
   const customerId = data.data[0][customerIdIndex].value;
-  
+
   // Also try to grab existing features from the marks if available
   const features = {};
   data.columns.forEach((col, idx) => {
     features[col.fieldName] = data.data[0][idx].value;
   });
-  
+
   currentCustomerData = features;
   analyzeCustomer(customerId);
 }
@@ -71,7 +71,7 @@ async function analyzeCustomer(customerId) {
   try {
     setStatus(`Analyzing Customer ${customerId}...`);
     const baseUrl = getApiBase().replace(/\/$/, "");
-    
+
     // Show simulator
     document.getElementById("simulatorControls").style.display = "block";
     document.getElementById("simPlaceholder").style.display = "none";
@@ -79,7 +79,7 @@ async function analyzeCustomer(customerId) {
     // 1. Get detailed counterfactual
     const cfRes = await fetch(`${baseUrl}/counterfactual`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         customer_id: customerId,
         timing_days: parseInt(document.getElementById("timing").value, 10),
@@ -93,7 +93,7 @@ async function analyzeCustomer(customerId) {
     const featData = await featRes.json();
 
     updateSelectedUI(cfData, featData.features);
-    
+
     // Initialize sliders based on current data if we have it
     if (currentCustomerData) {
       const usage = currentCustomerData["usage_drop_30d_pct"] || 0;
@@ -116,7 +116,7 @@ async function runSimulation() {
 
   const usage = parseFloat(document.getElementById("usageSlider").value);
   const tickets = parseFloat(document.getElementById("ticketSlider").value);
-  
+
   document.getElementById("usageVal").textContent = Math.round(usage);
   document.getElementById("ticketVal").textContent = Math.round(tickets);
 
@@ -124,7 +124,7 @@ async function runSimulation() {
     const baseUrl = getApiBase().replace(/\/$/, "");
     const res = await fetch(`${baseUrl}/predict`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentCustomerData,
         usage_drop_30d_pct: usage,
@@ -133,7 +133,7 @@ async function runSimulation() {
       })
     });
     const data = await res.json();
-    
+
     const simEl = document.getElementById("simResult");
     const risk = (data.churn_risk * 100).toFixed(1);
     const color = data.churn_risk >= 0.5 ? "#c2413b" : "#22c55e";
@@ -147,7 +147,7 @@ function updateSelectedUI(cfData, features) {
   const el = document.getElementById("selectedCustomer");
   const riskClass = cfData.churn_risk_base >= 0.5 ? "risk-high" : "risk-low";
   const riskLabel = cfData.churn_risk_base >= 0.5 ? "HIGH" : "LOW";
-  
+
   el.innerHTML = `
     Customer: <strong>${cfData.customer_id}</strong>
     <span class="risk-badge ${riskClass}">${riskLabel} RISK</span><br/>
@@ -163,7 +163,7 @@ function renderChart(features) {
   if (importanceChart) importanceChart.destroy();
 
   const topFeatures = features.slice(0, 5);
-  
+
   importanceChart = new Chart(ctx, {
     type: "bar",
     data: {
@@ -204,22 +204,36 @@ async function saveSettings() {
 
 async function refreshTopRegret() {
   try {
-    setStatus("Loading...");
+    const baseUrl = getApiBase().replace(/\/$/, "");
     const timing_days = parseInt(document.getElementById("timing").value, 10);
     const action_type = document.getElementById("actionType").value;
-    const url = getApiBase().replace(/\/$/, "") + "/batch_counterfactual";
+    const url = baseUrl + "/batch_counterfactual";
+
+    console.log("Calling API:", url);
+    setStatus(`Loading from ${baseUrl}...`);
+
     const res = await fetch(url, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ timing_days, action_type, top_n: 20 })
     });
-    if (!res.ok) throw new Error("API " + res.status);
+
+    console.log("Response status:", res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("API Error:", errorText);
+      throw new Error(`API ${res.status}: ${errorText.substring(0, 100)}`);
+    }
+
     const data = await res.json();
+    console.log("Received data:", data);
     renderRows(data.rows || []);
-    setStatus("Loaded.");
+    setStatus(`Loaded ${data.rows?.length || 0} customers.`);
   } catch (e) {
-    console.error(e);
-    setStatus("Failed: " + (e.message || e));
+    console.error("refreshTopRegret error:", e);
+    setStatus(`Failed: ${e.message || e.toString()}`);
+    alert(`Error: ${e.message}\n\nCheck console (F12) for details.\n\nAPI URL: ${getApiBase()}`);
   }
 }
 
@@ -263,7 +277,7 @@ async function triggerAction() {
     const url = getApiBase().replace(/\/$/, "") + "/action/trigger";
     const res = await fetch(url, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ customer_ids: ids, timing_days, action_type })
     });
     if (!res.ok) throw new Error("API " + res.status);
