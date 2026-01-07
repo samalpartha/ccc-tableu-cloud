@@ -48,23 +48,43 @@ async function init() {
 }
 
 async function onSelectionChange(event) {
-  const marks = await event.getMarksAsync();
-  if (!marks || marks.data.length === 0 || marks.data[0].data.length === 0) return;
+  try {
+    console.log("Selection changed event triggered");
+    const marks = await event.getMarksAsync();
+    console.log("Marks data:", marks);
 
-  const data = marks.data[0];
-  const customerIdIndex = data.columns.findIndex(c => c.fieldName.toLowerCase().includes("customer_id"));
-  if (customerIdIndex === -1) return;
+    if (!marks || marks.data.length === 0 || marks.data[0].data.length === 0) {
+      console.log("No marks data available");
+      return;
+    }
 
-  const customerId = data.data[0][customerIdIndex].value;
+    const data = marks.data[0];
+    console.log("Available columns:", data.columns.map(c => c.fieldName));
 
-  // Also try to grab existing features from the marks if available
-  const features = {};
-  data.columns.forEach((col, idx) => {
-    features[col.fieldName] = data.data[0][idx].value;
-  });
+    const customerIdIndex = data.columns.findIndex(c => c.fieldName.toLowerCase().includes("customer"));
+    console.log("Customer ID index:", customerIdIndex);
 
-  currentCustomerData = features;
-  analyzeCustomer(customerId);
+    if (customerIdIndex === -1) {
+      setStatus("Error: Customer ID column not found. Available: " + data.columns.map(c => c.fieldName).join(", "));
+      return;
+    }
+
+    const customerId = data.data[0][customerIdIndex].value;
+    console.log("Selected customer ID:", customerId);
+
+    // Also try to grab existing features from the marks if available
+    const features = {};
+    data.columns.forEach((col, idx) => {
+      features[col.fieldName] = data.data[0][idx].value;
+    });
+
+    currentCustomerData = features;
+    console.log("Customer data:", currentCustomerData);
+    analyzeCustomer(customerId);
+  } catch (e) {
+    console.error("Selection change error:", e);
+    setStatus("Selection error: " + e.message);
+  }
 }
 
 async function analyzeCustomer(customerId) {
