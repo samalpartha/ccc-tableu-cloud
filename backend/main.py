@@ -52,6 +52,23 @@ def get_base_df():
         _base_df = pd.read_csv(BASE_CUSTOMERS_CSV)
     return _base_df
 
+@app.get("/")
+def root():
+    """Root endpoint - API is running"""
+    return {
+        "message": "Counterfactual Command Center API",
+        "status": "running",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": {
+            "metadata": "/metadata/features, /metadata/customers",
+            "prediction": "/predict, /predict/explain",
+            "counterfactual": "/counterfactual, /batch_counterfactual",
+            "actions": "/action/trigger"
+        }
+    }
+
 @app.get("/health")
 def health():
     return {"ok": True}
