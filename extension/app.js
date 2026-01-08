@@ -112,6 +112,13 @@ async function analyzeCustomer(customerId) {
     const featRes = await fetch(`${baseUrl}/metadata/features`);
     const featData = await featRes.json();
 
+    // 3. Get full customer data for simulation
+    const custRes = await fetch(`${baseUrl}/customer/${customerId}`);
+    if (custRes.ok) {
+      currentCustomerData = await custRes.json();
+      console.log("Full customer data loaded:", currentCustomerData);
+    }
+
     updateSelectedUI(cfData, featData.features);
 
     // Initialize sliders based on current data if we have it

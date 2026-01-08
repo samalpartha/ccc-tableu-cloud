@@ -107,6 +107,17 @@ def predict(req: PredictRequest):
     p = float(predict_proba(model, df)[0])
     return PredictResponse(customer_id=req.customer_id, churn_risk=p)
 
+@app.get("/customer/{customer_id}", response_model=PredictRequest)
+def get_customer(customer_id: int):
+    base = get_base_df()
+    row = base.loc[base["customer_id"] == customer_id]
+    if row.empty:
+        raise HTTPException(status_code=404, detail="customer_id not found")
+    
+    # Convert single row to dict and return
+    data = row.iloc[0].to_dict()
+    return PredictRequest(**data)
+
 @app.post("/counterfactual", response_model=CounterfactualResponse)
 def counterfactual(req: CounterfactualRequest):
     model = get_model()
