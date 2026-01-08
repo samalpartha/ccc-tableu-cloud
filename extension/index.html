@@ -65,21 +65,29 @@
     <div class="card">
       <div class="lbl">Interactive Simulator</div>
       <div id="simulatorControls" style="display: none;">
+        <div class="gauge-container">
+          <div class="gauge">
+            <div class="gauge-body">
+              <div id="gaugeFill" class="gauge-fill"></div>
+              <div class="gauge-cover"></div>
+            </div>
+            <div id="gaugeVal" class="gauge-value">0%</div>
+          </div>
+          <div class="subtitle">Simulated Churn Risk</div>
+        </div>
+
         <div class="row">
           <div class="col">
-            <label class="lbl">Usage Drop % (<span id="usageVal">0</span>%)</label>
+            <label class="lbl">Usage Drop (<span id="usageVal">0</span>%)</label>
             <input type="range" id="usageSlider" min="0" max="100" value="0" class="slider" />
           </div>
           <div class="col">
-            <label class="lbl">Tickets (<span id="ticketVal">0</span>)</label>
+            <label class="lbl">Weekly Tickets (<span id="ticketVal">0</span>)</label>
             <input type="range" id="ticketSlider" min="0" max="20" value="0" class="slider" />
           </div>
         </div>
-        <div id="simResult" class="selected-info" style="margin-top: 10px; border-left: 4px solid var(--btn);">
-          Adjust sliders to see real-time risk impact.
-        </div>
       </div>
-      <div id="simPlaceholder" class="help">Select a customer to enable simulation.</div>
+      <div id="simPlaceholder" class="help">Select a customer in the dashboard to enable what-if simulation.</div>
     </div>
 
     <div class="card">

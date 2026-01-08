@@ -2,10 +2,6 @@ let settings;
 let importanceChart;
 let currentCustomerData = null;
 
-function setStatus(msg) {
-  const el = document.getElementById("status");
-  if (el) el.textContent = msg || "";
-}
 
 function getApiBase() {
   const v = (document.getElementById("apiBase").value || "").trim();
@@ -138,6 +134,14 @@ async function analyzeCustomer(customerId) {
   }
 }
 
+function setStatus(msg) {
+  const el = document.getElementById("status");
+  if (el) {
+    el.innerHTML = msg ? `<span class="pulse"></span>${msg}` : "";
+  }
+}
+
+
 async function runSimulation() {
   if (!currentCustomerData) return;
 
@@ -161,10 +165,22 @@ async function runSimulation() {
     });
     const data = await res.json();
 
-    const simEl = document.getElementById("simResult");
-    const risk = (data.churn_risk * 100).toFixed(1);
-    const color = data.churn_risk >= 0.5 ? "#c2413b" : "#22c55e";
-    simEl.innerHTML = `Simulated Risk: <strong style="color: ${color}">${risk}%</strong>`;
+    // Update Premium Gauge
+    const risk = data.churn_risk;
+    const riskPct = Math.round(risk * 100);
+
+    // Animate Gauge: rotation from -90 (0%) to 90 (100%)
+    const rotation = -90 + (risk * 180);
+    const gaugeFill = document.getElementById("gaugeFill");
+    const gaugeVal = document.getElementById("gaugeVal");
+
+    gaugeFill.style.transform = `rotate(${rotation}deg)`;
+    gaugeVal.textContent = `${riskPct}%`;
+
+    // Dynamic color based on risk
+    const color = risk >= 0.5 ? "var(--danger)" : "var(--success)";
+    gaugeVal.style.color = color;
+
   } catch (e) {
     console.error("Simulation failed", e);
   }
