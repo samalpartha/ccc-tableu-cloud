@@ -35,6 +35,8 @@ async function init() {
     document.getElementById("ticketSlider").addEventListener("input", runSimulation);
 
     setStatus("Initialized with Tableau.");
+    // Auto-load data immediately on startup
+    refreshTopRegret();
   } catch (e) {
     console.warn("Not running inside Tableau.", e);
     const errorMsg = e.message || e.toString();
@@ -163,6 +165,12 @@ async function runSimulation() {
 
     // Update Premium Gauge
     const risk = data.churn_risk;
+    if (isNaN(risk) || risk === undefined) {
+      gaugeVal.textContent = "N/A";
+      gaugeVal.style.color = "var(--text-secondary)";
+      return;
+    }
+
     const riskPct = Math.round(risk * 100);
 
     // Animate Gauge: rotation from -90 (0%) to 90 (100%)
