@@ -4,9 +4,13 @@ let currentCustomerData = null;
 
 
 function getApiBase() {
+  // Production: If on Render, always use the current origin
+  if (window.location.hostname.includes("onrender.com")) {
+    return window.location.origin;
+  }
+  // Local/Dev: Use the override value or default to localhost:8004
   const v = (document.getElementById("apiBase").value || "").trim();
-  // If we are on Render, the API is at the root of the same domain
-  return v || window.location.origin;
+  return v || "http://localhost:8004";
 }
 
 async function init() {
