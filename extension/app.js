@@ -51,6 +51,19 @@ async function init() {
     document.getElementById("usageSlider").addEventListener("input", runSimulation);
     document.getElementById("ticketSlider").addEventListener("input", runSimulation);
 
+    // Bind Refresh Buttons
+    const refreshSimBtn = document.getElementById("refreshBtn");
+    if (refreshSimBtn) {
+      refreshSimBtn.addEventListener("click", () => {
+        if (currentCustomerData) analyzeCustomer(currentCustomerData.customer_id || currentCustomerData.Customer_Id);
+      });
+    }
+
+    const refreshListBtn = document.getElementById("refreshListBtn");
+    if (refreshListBtn) {
+      refreshListBtn.addEventListener("click", refreshTopRegret);
+    }
+
     setStatus("Initialized with Tableau.");
   } catch (e) {
     console.warn("Not running inside Tableau.", e);
@@ -341,6 +354,8 @@ function renderRows(rows) {
     const risk = r.churn_risk_counterfactual ?? 0;
     const riskClass = risk >= 0.5 ? "risk-high" : "risk-low";
     const improvement = ((r.delta_risk || 0) * 100).toFixed(1);
+    const regretVal = r.regret_score || 0;
+    const regretFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(regretVal);
 
     tr.innerHTML = `
       <td style="font-weight: 700;">#${r.customer_id}</td>
@@ -349,6 +364,7 @@ function renderRows(rows) {
       <td style="color: ${improvement > 0 ? 'var(--success)' : 'var(--text-secondary)'}; font-weight: 700;">
         ${improvement > 0 ? '↑ ' : ''}${improvement}%
       </td>
+      <td style="font-weight: 700; color: var(--text-primary); text-align: right;">${regretFmt}</td>
     `;
     tbody.appendChild(tr);
   }

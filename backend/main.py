@@ -16,12 +16,15 @@ from backend.schemas import (
 )
 from backend.model import load_model, predict_proba, get_feature_importance, FEATURE_COLS
 from backend.counterfactual import apply_counterfactual
+from backend.auth import router as auth_router
 
 BASE_CUSTOMERS_CSV = os.getenv("BASE_CUSTOMERS_CSV", os.path.join(os.path.dirname(__file__), "..", "outputs", "customers_base.csv"))
 TRAIN_CSV = os.path.join(os.path.dirname(__file__), "..", "outputs", "train_churn_synth.csv")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
 
 app = FastAPI(title="Counterfactual Command Center API", version="1.0.0")
+
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

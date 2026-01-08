@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Counterfactual Command Center Extension</title>
-  <link rel="stylesheet" href="styles.css?v=10.3">
+  <link rel="stylesheet" href="styles.css?v=10.5">
   <script
     src="https://cdn.jsdelivr.net/npm/@tableau/extensions-api-lib@latest/dist/tableau.extensions.1.latest.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,7 +16,7 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
           <h1 class="title">Counterfactual Command Center</h1>
-          <p class="subtitle">Agentic Retention Intelligence for Tableau Cloud</p>
+          <p class="subtitle">Quantifying regret and rehearsing better decisions.</p>
         </div>
         <div id="userInfo" style="text-align: right; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
         </div>
@@ -87,12 +87,12 @@
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-          <button id="refreshBtn" class="btn">Refresh Scorecards</button>
+          <button id="refreshBtn" class="btn">Refresh Simulation</button>
           <button id="slackBtn" class="btn danger">Trigger Slack Alert</button>
         </div>
       </div>
 
-      <!-- AI Recommendation Panel (Highlighted) -->
+      <!-- AI Recommendation Panel -->
       <div id="recommendationPanel" class="card" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span class="lbl" style="color: var(--accent-primary);">AI OPTIMAL STRATEGY</span>
@@ -148,7 +148,12 @@
 
     <!-- Global View -->
     <div class="card">
-      <span class="lbl">High-Regret Customer Priority</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span class="lbl">High-Regret Customer Priority</span>
+        <button id="refreshListBtn" class="btn secondary" style="padding: 8px 16px; font-size: 12px;">
+          Refresh Scorecards
+        </button> <!-- Note: Added explicit ID for this button to avoid conflict/ambiguity if needed logic differs -->
+      </div>
       <div style="overflow-x: auto;">
         <table class="tbl" id="regretTable">
           <thead>
@@ -156,12 +161,13 @@
               <th>ID</th>
               <th>Base Risk</th>
               <th>After AI</th>
-              <th>Net Improvement</th>
+              <th>Net Impro.</th>
+              <th>Est. Revenue Regret</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="4" style="text-align: center; color: var(--text-secondary);">Load data to see top priorities
+              <td colspan="5" style="text-align: center; color: var(--text-secondary);">Load data to see top priorities
               </td>
             </tr>
           </tbody>
@@ -170,7 +176,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=10.4"></script>
+  <script src="app.js?v=10.5"></script>
 </body>
 
 </html>
