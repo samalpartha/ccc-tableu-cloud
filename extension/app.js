@@ -14,7 +14,7 @@ async function init() {
     await tableau.extensions.initializeAsync();
     settings = tableau.extensions.settings;
 
-    const defaultApi = "https://ccc-tableu-cloud.onrender.com";
+    const defaultApi = "http://localhost:8004";
     let apiVal = settings.get("apiBase") || defaultApi;
 
     // Auto-fix common typos (like the 'tablsu' typo discovered in user screenshots)
@@ -55,8 +55,10 @@ async function init() {
   } catch (e) {
     console.warn("Not running inside Tableau.", e);
     const errorMsg = e.message || e.toString();
-    setStatus("Mode: Standalone (" + errorMsg.substring(0, 40) + ")");
-    document.getElementById("apiBase").value = "https://ccc-tableu-cloud.onrender.com";
+    setStatus("Mode: Standalone (Local Dev)");
+    document.getElementById("apiBase").value = "http://localhost:8004/";
+    checkApiHealth();
+    refreshTopRegret();
   }
   // Auto-load data regardless of mode
   refreshTopRegret();
@@ -326,6 +328,14 @@ function renderRows(rows) {
   }
   for (const r of rows) {
     const tr = document.createElement("tr");
+    tr.className = "clickable-row";
+    tr.style.cursor = "pointer";
+    tr.onclick = () => {
+      // Visual feedback for selection
+      document.querySelectorAll("#regretTable tbody tr").forEach(row => row.style.backgroundColor = "");
+      tr.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+      analyzeCustomer(r.customer_id);
+    };
 
     // Risk Badge for Counterfactual Risk
     const risk = r.churn_risk_counterfactual ?? 0;

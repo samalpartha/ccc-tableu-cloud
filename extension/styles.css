@@ -215,6 +215,11 @@ body::before {
   font-size: 14px;
 }
 
+.clickable-row:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transition: background 0.2s ease;
+}
+
 .tbl tr td:first-child {
   border-left: 1px solid var(--glass-border);
   border-top-left-radius: 12px;
