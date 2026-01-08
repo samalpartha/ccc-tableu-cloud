@@ -2,133 +2,160 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
   <title>Counterfactual Command Center Extension</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="styles.css">
   <script
-    src="https://cdn.jsdelivr.net/gh/tableau/extensions-api@v1.12.0/lib/tableau.extensions.1.latest.min.js"></script>
+    src="https://cdn.jsdelivr.net/npm/@tableau/extensions-api-lib@latest/dist/tableau.extensions.1.latest.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
   <div class="wrap">
     <div class="hdr">
-      <div class="row" style="justify-content: space-between; margin: 0;">
-        <div>
-          <div class="title">Counterfactual Command Center</div>
-          <div class="subtitle">Decision regret in the flow of work.</div>
-        </div>
-        <div id="userInfo" class="subtitle" style="text-align: right;"></div>
+      <h1 class="title">Counterfactual Command Center</h1>
+      <p class="subtitle">Agentic Retention Intelligence for Tableau Cloud</p>
+    </div>
+
+    <!-- Configuration (Glass Container) -->
+    <div class="card" style="margin-top: 0;">
+      <span class="lbl">Backend Configuration</span>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <input type="text" id="apiBase" class="inp" placeholder="API Base URL"
+          value="https://ccc-tableu-cloud.onrender.com">
+        <button id="saveConfig" class="btn secondary" style="padding: 14px;">Update</button>
+      </div>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="slackEnable" style="width: 18px; height: 18px; accent-color: var(--accent-primary);">
+        <label for="slackEnable" style="font-size: 13px; font-weight: 600; cursor: pointer;">Enable Slack
+          Webhooks</label>
       </div>
     </div>
 
-    <div class="card">
-      <label class="lbl">API Base URL</label>
-      <input id="apiBase" class="inp" placeholder="https://your-api.example" />
-      <div class="row">
-        <label class="chk"><input id="slackEnabled" type="checkbox" /> Enable Slack Trigger</label>
-        <button id="saveBtn" class="btn secondary">Save</button>
-      </div>
-      <div id="status" class="status"></div>
+    <!-- Placeholder State -->
+    <div id="simPlaceholder" class="card" style="text-align: center; padding: 60px 20px;">
+      <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">📊</div>
+      <h2 style="margin: 0; font-weight: 700;">Ready for Analysis</h2>
+      <p style="color: var(--text-secondary); margin-top: 10px;">Select a customer in your Tableau dashboard to begin
+        the real-time retention simulation.</p>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <div class="col">
-          <label class="lbl">Timing (days earlier)</label>
-          <select id="timing" class="inp">
-            <option value="0">0</option>
-            <option value="7">7</option>
-            <option value="14" selected>14</option>
-            <option value="30">30</option>
-          </select>
+    <!-- Active Analysis -->
+    <div id="simulatorControls" style="display: none;">
+
+      <!-- Customer Info & Top Actions -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <span class="lbl" id="selectedCustomer">Analyzing Customer: --</span>
+          <div id="status" class="status">
+            <div class="pulse"></div>Ready
+          </div>
         </div>
-        <div class="col">
-          <label class="lbl">Action Type</label>
-          <select id="actionType" class="inp">
-            <option value="none">none</option>
-            <option value="discount">discount</option>
-            <option value="priority_support">priority_support</option>
-            <option value="proactive_outreach" selected>proactive_outreach</option>
-          </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <label class="lbl">Intervention Type</label>
+            <select id="actionType" class="inp">
+              <option value="discount">Price Discount</option>
+              <option value="priority_support">Priority Support</option>
+              <option value="proactive_outreach">Proactive Outreach</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Timing (Days Ahead)</label>
+            <select id="timing" class="inp">
+              <option value="7">Next 7 Days</option>
+              <option value="14">Next 14 Days</option>
+              <option value="30">Next 30 Days</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+          <button id="refreshBtn" class="btn">Refresh Scorecards</button>
+          <button id="slackBtn" class="btn danger">Trigger Slack Alert</button>
         </div>
       </div>
 
-      <div class="row">
-        <button id="refreshBtn" class="btn">Refresh Top Regret</button>
-        <button id="triggerBtn" class="btn danger">Trigger Retention Action</button>
+      <!-- AI Recommendation Panel (Highlighted) -->
+      <div id="recommendationPanel" class="card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span class="lbl" style="color: var(--accent-primary);">AI OPTIMAL STRATEGY</span>
+          <button id="optimizeBtn" class="btn"
+            style="padding: 10px 16px; font-size: 12px; background: rgba(59, 130, 246, 0.2); border: 1px solid var(--accent-primary);">Auto-Optimize</button>
+        </div>
+        <div id="recommendationText" style="font-size: 15px; line-height: 1.6; color: #fff; font-weight: 500;">
+          Predicting the most effective intervention...
+        </div>
       </div>
 
-      <div class="help">
-        Refresh loads top regret customers from your API. Trigger posts the top 5 to Slack (if enabled).
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="lbl">Interactive Simulator</div>
-      <div id="simulatorControls" style="display: none;">
+      <!-- Live Risk Gauge -->
+      <div class="card">
+        <span class="lbl">Simulated Retention Risk</span>
         <div class="gauge-container">
           <div class="gauge">
             <div class="gauge-body">
-              <div id="gaugeFill" class="gauge-fill"></div>
+              <div class="gauge-fill" id="gaugeFill"></div>
               <div class="gauge-cover"></div>
             </div>
-            <div id="gaugeVal" class="gauge-value">0%</div>
-          </div>
-          <div class="subtitle">Simulated Churn Risk</div>
-        </div>
-
-        <div id="recommendationPanel" class="card"
-          style="display: none; background: rgba(59, 130, 246, 0.1); border-color: var(--accent); margin-top: 16px;">
-          <div class="subtitle" style="color: var(--accent); font-weight: 600;">AI Recommendation</div>
-          <div id="recommendationText" style="font-size: 13px; margin: 8px 0;"></div>
-          <div class="row">
-            <button class="btn" id="optimizeBtn" style="width: 100%;"><span class="pulse"></span>AI
-              Auto-Optimize</button>
+            <div class="gauge-value" id="gaugeVal">0%</div>
           </div>
         </div>
 
-        <div class="row">
-          <div class="col">
-            <label class="lbl">Usage Drop (<span id="usageVal">0</span>%)</label>
-            <input type="range" id="usageSlider" min="0" max="100" value="0" class="slider" />
+        <!-- Real-time Sliders -->
+        <div style="margin-top: 32px;">
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span class="lbl">Usage Drop (30d %)</span>
+              <span id="usageVal" style="font-weight: 800; color: var(--accent-primary);">20%</span>
+            </div>
+            <input type="range" id="usageSlider" class="slider" min="0" max="100" value="20">
           </div>
-          <div class="col">
-            <label class="lbl">Weekly Tickets (<span id="ticketVal">0</span>)</label>
-            <input type="range" id="ticketSlider" min="0" max="20" value="0" class="slider" />
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span class="lbl">Support Tickets (30d)</span>
+              <span id="ticketVal" style="font-weight: 800; color: var(--accent-primary);">2</span>
+            </div>
+            <input type="range" id="ticketSlider" class="slider" min="0" max="20" value="2">
           </div>
         </div>
       </div>
-      <div id="simPlaceholder" class="help">Select a customer in the dashboard to enable what-if simulation.</div>
-    </div>
 
-    <div class="card">
-      <div class="lbl">Selected Customer Analysis</div>
-      <div id="selectedCustomer" class="selected-info">Select a customer in the dashboard to analyze.</div>
-      <div class="chart-container">
-        <canvas id="importanceChart"></canvas>
+      <!-- Feature Importance -->
+      <div class="card">
+        <span class="lbl">Why they might churn?</span>
+        <div class="chart-container">
+          <canvas id="importanceChart"></canvas>
+        </div>
       </div>
-    </div>
 
+    </div> <!-- End Simulator -->
+
+    <!-- Global View -->
     <div class="card">
-      <div class="lbl">Top Regret Customers</div>
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>customer_id</th>
-            <th>base_risk</th>
-            <th>cf_risk</th>
-            <th>delta</th>
-            <th>regret_$</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <span class="lbl">High-Regret Customer Priority</span>
+      <div style="overflow-x: auto;">
+        <table class="tbl" id="regretTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Base Risk</th>
+              <th>After AI</th>
+              <th>Net Improvement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-secondary);">Load data to see top priorities
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <script src="app.js"></script>
 </body>
 
 </html>

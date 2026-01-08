@@ -14,9 +14,9 @@ async function init() {
     await tableau.extensions.initializeAsync();
     settings = tableau.extensions.settings;
 
-    const defaultApi = window.location.origin;
+    const defaultApi = "https://ccc-tableu-cloud.onrender.com";
     document.getElementById("apiBase").value = settings.get("apiBase") || defaultApi;
-    document.getElementById("slackEnabled").checked = (settings.get("slackEnabled") || "false") === "true";
+    document.getElementById("slackEnable").checked = (settings.get("slackEnable") || "false") === "true";
 
     // Display User Info
     const user = tableau.extensions.viewer;
@@ -240,7 +240,7 @@ async function saveSettings() {
   const slackEnabled = document.getElementById("slackEnabled").checked ? "true" : "false";
   if (settings) {
     settings.set("apiBase", apiBase);
-    settings.set("slackEnabled", slackEnabled);
+    settings.set("slackEnable", slackEnabled);
     await settings.saveAsync();
   }
   setStatus("Saved settings.");
@@ -282,35 +282,41 @@ async function refreshTopRegret() {
 }
 
 function renderRows(rows) {
-  const tbody = document.getElementById("rows");
+  const tbody = document.querySelector("#regretTable tbody");
   tbody.innerHTML = "";
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No data available</td></tr>';
+    return;
+  }
   for (const r of rows) {
     const tr = document.createElement("tr");
-    const cells = [
-      r.customer_id,
-      (r.churn_risk_base ?? 0).toFixed(3),
-      (r.churn_risk_counterfactual ?? 0).toFixed(3),
-      (r.delta_risk ?? 0).toFixed(3),
-      Math.round(r.regret_score ?? 0).toLocaleString()
-    ];
-    for (const c of cells) {
-      const td = document.createElement("td");
-      td.textContent = String(c);
-      tr.appendChild(td);
-    }
+
+    // Risk Badge for Counterfactual Risk
+    const risk = r.churn_risk_counterfactual ?? 0;
+    const riskClass = risk >= 0.5 ? "risk-high" : "risk-low";
+    const improvement = ((r.delta_risk || 0) * 100).toFixed(1);
+
+    tr.innerHTML = `
+      <td style="font-weight: 700;">#${r.customer_id}</td>
+      <td>${((r.churn_risk_base || 0) * 100).toFixed(1)}%</td>
+      <td><span class="risk-badge ${riskClass}">${(risk * 100).toFixed(1)}%</span></td>
+      <td style="color: ${improvement > 0 ? 'var(--success)' : 'var(--text-secondary)'}; font-weight: 700;">
+        ${improvement > 0 ? '↑ ' : ''}${improvement}%
+      </td>
+    `;
     tbody.appendChild(tr);
   }
 }
 
 async function triggerAction() {
   try {
-    const slackEnabled = document.getElementById("slackEnabled").checked;
-    if (!slackEnabled) { setStatus("Slack trigger disabled."); return; }
+    const slackEnable = document.getElementById("slackEnable").checked;
+    if (!slackEnable) { setStatus("Slack trigger disabled."); return; }
 
     const timing_days = parseInt(document.getElementById("timing").value, 10);
     const action_type = document.getElementById("actionType").value;
 
-    const tbody = document.getElementById("rows");
+    const tbody = document.querySelector("#regretTable tbody");
     const ids = [];
     for (let i = 0; i < Math.min(5, tbody.children.length); i++) {
       const id = parseInt(tbody.children[i].children[0].textContent, 10);
@@ -332,9 +338,9 @@ async function triggerAction() {
   }
 }
 
-document.getElementById("saveBtn").addEventListener("click", saveSettings);
+document.getElementById("saveConfig").addEventListener("click", saveSettings);
 document.getElementById("refreshBtn").addEventListener("click", refreshTopRegret);
-document.getElementById("triggerBtn").addEventListener("click", triggerAction);
+document.getElementById("slackBtn").addEventListener("click", triggerAction);
 document.getElementById("optimizeBtn").addEventListener("click", handleOptimize);
 
 async function handleOptimize() {
