@@ -39,7 +39,7 @@ async function init() {
     console.warn("Not running inside Tableau.", e);
     const errorMsg = e.message || e.toString();
     setStatus("Mode: Standalone (" + errorMsg.substring(0, 40) + ")");
-    document.getElementById("apiBase").value = "http://localhost:8004";
+    document.getElementById("apiBase").value = "https://ccc-tableu-cloud.onrender.com";
   }
 }
 
@@ -68,14 +68,7 @@ async function onSelectionChange(event) {
     const customerId = data.data[0][customerIdIndex].value;
     console.log("Selected customer ID:", customerId);
 
-    // Also try to grab existing features from the marks if available
-    const features = {};
-    data.columns.forEach((col, idx) => {
-      features[col.fieldName] = data.data[0][idx].value;
-    });
-
-    currentCustomerData = features;
-    console.log("Customer data:", currentCustomerData);
+    // Immediately start analysis with the ID
     analyzeCustomer(customerId);
   } catch (e) {
     console.error("Selection change error:", e);
@@ -93,7 +86,19 @@ async function analyzeCustomer(customerId) {
     document.getElementById("simPlaceholder").style.display = "none";
     document.getElementById("recommendationPanel").style.display = "block";
 
-    // 1. Get detailed counterfactual
+    // 1. Get full golden record from backend FIRST (Essential for schema-accurate prediction)
+    const custRes = await fetch(`${baseUrl}/customer/${customerId}`);
+    if (!custRes.ok) {
+      throw new Error(`Failed to load customer profile (API ${custRes.status})`);
+    }
+    currentCustomerData = await custRes.json();
+    console.log("Full customer record loaded:", currentCustomerData);
+
+    // 2. Get global feature importance
+    const featRes = await fetch(`${baseUrl}/metadata/features`);
+    const featData = await featRes.json();
+
+    // 3. Get detailed counterfactual for initial view
     const cfRes = await fetch(`${baseUrl}/counterfactual`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -105,18 +110,8 @@ async function analyzeCustomer(customerId) {
     });
     const cfData = await cfRes.json();
 
-    // 2. Get global feature importance
-    const featRes = await fetch(`${baseUrl}/metadata/features`);
-    const featData = await featRes.json();
-
-    // 3. Get full customer data for simulation
-    const custRes = await fetch(`${baseUrl}/customer/${customerId}`);
-    if (custRes.ok) {
-      currentCustomerData = await custRes.json();
-      console.log("Full customer data loaded:", currentCustomerData);
-    }
-
     updateSelectedUI(cfData, featData.features);
+    runSimulation(); // Trigger initial gauge render
 
     // Initialize sliders based on current data if we have it
     if (currentCustomerData) {
