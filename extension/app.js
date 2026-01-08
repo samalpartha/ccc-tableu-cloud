@@ -413,15 +413,8 @@ async function triggerAction() {
   }
 }
 
-document.getElementById("saveConfig").addEventListener("click", () => {
-  saveSettings();
-  checkApiHealth();
-});
-document.getElementById("resetApi").addEventListener("click", () => {
-  document.getElementById("apiBase").value = "https://ccc-tableu-cloud.onrender.com";
-  saveSettings();
-  checkApiHealth();
-});
+// Obsolete config listeners removed for v2.0
+
 document.getElementById("refreshBtn").addEventListener("click", refreshTopRegret);
 document.getElementById("slackBtn").addEventListener("click", triggerAction);
 document.getElementById("optimizeBtn").addEventListener("click", handleOptimize);
