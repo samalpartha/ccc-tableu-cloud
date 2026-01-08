@@ -4,10 +4,13 @@ A world-class, hackathon-grade end-to-end solution for Tableau Cloud + AI. This 
 
 ## 🚀 "World-Class" Features
 - **Predictive Churn Engine**: Uses a HistGradientBoosting model to predict churn risk based on 30-day behavior metrics.
-- **Explainable AI (XAI)**: Integrated global feature importance charts to show *why* the model predicts high risk (Explainability).
-- **Interactive "What-If" Simulator**: Real-time sliders in the Tableau Dashboard allow users to simulate how changes in customer behavior (usage drop, support tickets) would impact their risk score.
-- **Deep Tableau Integration**: Listens to `MarkSelectionChanged` events. Selecting a customer bar in Tableau instantly triggers a counterfactual analysis for that specific individual.
-- **Actionable Analytics**: One-click "Trigger Retention Action" that posts high-regret customers directly to Slack via webhooks.
+- **Agentic AI Recommender**: A new intelligence layer that automatically identifies the optimal intervention strategy (Action + Timing) to maximize retention for a specific customer.
+- **Premium Visual Polish**: Features a state-of-the-art **Glassmorphism** design system, premium **Outfit** typography, and smooth micro-animations.
+- **Animated Risk Gauge**: A real-time CSS-based semi-circular gauge that visually represents simulated risk changes as you adjust sliders.
+- **Interactive "What-If" Simulator**: Real-time sliders in the Tableau Dashboard allow users to simulate how changes in customer behavior impact their risk score.
+- **Explainable AI (XAI)**: Integrated feature importance charts and **Natural Language Reasoning** for AI recommendations to explain *why* an action is suggested.
+- **Deep Tableau Integration**: Listens to `MarkSelectionChanged` events for instant, context-aware analysis.
+- **Actionable Analytics**: One-click "Trigger Retention Action" that posts high-regret customers to Slack via webhooks.
 
 ## 🏗️ Architecture
 
@@ -20,10 +23,11 @@ flowchart TB
         EXT[Dashboard Extension]
     end
     
-    subgraph Frontend["Frontend - Extension UI"]
-        HTML[index.html]
+    subgraph Frontend["Frontend - Premium UI"]
+        HTML[index.html - Glassmorphism]
         JS[app.js Extension Logic]
-        CSS[styles.css]
+        CSS[styles.css - Premium Design]
+        GAUGE[Animated Risk Gauge]
         CHART[Chart.js Visualizations]
     end
     
@@ -31,6 +35,7 @@ flowchart TB
         API[FastAPI Application]
         HEALTH[Health Check]
         PREDICT[Predict Endpoint]
+        REC[AI Recommend Endpoint]
         EXPLAIN[Explain Endpoint]
         CF[Counterfactual Endpoint]
         BATCH[Batch Counterfactual]
@@ -38,7 +43,6 @@ flowchart TB
         ACTION[Action Trigger]
         MODEL[model.py ML Engine]
         COUNTER[counterfactual.py]
-        SCHEMA[schemas.py]
     end
     
     subgraph ML["ML Pipeline"]
@@ -56,15 +60,17 @@ flowchart TB
     JS -->|HTTP Requests| API
     
     API --> PREDICT
+    API --> REC
     API --> EXPLAIN
     API --> CF
     API --> BATCH
     API --> META
     API --> ACTION
     
+    REC --> MODEL
+    REC --> COUNTER
     PREDICT --> MODEL
     EXPLAIN --> MODEL
-    EXPLAIN --> FEATURES
     CF --> MODEL
     CF --> COUNTER
     BATCH --> MODEL
@@ -77,12 +83,14 @@ flowchart TB
     HGBOOST --> MODEL
     
     DS -.->|CSV Upload| TC
+    JS --> GAUGE
     CHART -.->|Render| JS
     
     style TC fill:#2d6cdf,color:#fff
     style API fill:#22c55e,color:#fff
     style MODEL fill:#c2413b,color:#fff
     style SLACK fill:#611f69,color:#fff
+    style GAUGE fill:#f59e0b,color:#fff
 ```
 
 ### Backend Architecture
@@ -94,10 +102,12 @@ graph LR
         subgraph "Request Handlers"
             H1[Health Check]
             H2[Prediction Engine]
-            H3[Explainability Engine]
-            H4[Counterfactual Engine]
-            H5[Batch Processing]
-            H6[Slack Integration]
+            H3[AI Recommender]
+            H4[Explainability Engine]
+            H5[Counterfactual Engine]
+            H6[Batch Processing]
+            H7[Slack Integration]
+            H8[Customer Retriever]
         end
         
         subgraph "Business Logic"
@@ -121,23 +131,29 @@ graph LR
     MAIN --> H4
     MAIN --> H5
     MAIN --> H6
+    MAIN --> H7
+    MAIN --> H8
     
     H2 --> ML
     H3 --> ML
+    H3 --> CF
     H4 --> ML
-    H4 --> CF
     H5 --> ML
     H5 --> CF
+    H6 --> ML
+    H6 --> CF
+    H8 --> CSV1
     
     ML --> PKL
     ML --> CSV2
     CF --> CSV1
     
-    H6 -->|Webhook POST| SLACK[Slack API]
+    H7 -->|Webhook POST| SLACK[Slack API]
     
     style MAIN fill:#2d6cdf,color:#fff
     style ML fill:#c2413b,color:#fff
     style CF fill:#f59e0b,color:#fff
+    style H3 fill:#22c55e,color:#fff
 ```
 
 ### Frontend Extension Architecture
@@ -146,45 +162,45 @@ flowchart TB
     subgraph Extension["Tableau Dashboard Extension"]
         INIT[Extension Initialization]
         SEL[Mark Selection Listener]
+        OPTIMIZE[AI Auto-Optimize Click]
         SLIDE[Slider Input Listeners]
         BTN[Button Click Handlers]
-        STATUS[Status Display]
+        STATUS[Status Display - Pulse]
         CUST[Customer Info Panel]
-        SIM[What-If Simulator]
+        GAUGE[Animated Risk Gauge]
         CHART2[Feature Importance Chart]
         TABLE[Top Regret Table]
         CONFIG[Settings Panel]
         FETCH1[API: Counterfactual]
         FETCH2[API: Predict]
-        FETCH3[API: Metadata]
-        FETCH4[API: Batch]
-        FETCH5[API: Action]
+        FETCH3[API: Recommend]
+        FETCH4[API: Metadata]
         STATE[Current Customer Data]
-        SETTINGS[Extension Settings]
     end
     
     INIT -->|initializeAsync| SEL
-    INIT --> SETTINGS
     
-    SEL -->|getMarksAsync| FETCH1
-    SEL -->|getMarksAsync| FETCH3
-    FETCH1 --> CUST
-    FETCH3 --> CHART2
+    SEL -->|getMarksAsync| FETCH4
+    FETCH4 --> CHART2
+    
+    OPTIMIZE --> FETCH3
+    FETCH3 --> GAUGE
+    FETCH3 --> STATE
     
     SLIDE -->|Real-time| FETCH2
-    FETCH2 --> SIM
+    FETCH2 --> GAUGE
     
-    BTN -->|Refresh| FETCH4
-    BTN -->|Trigger| FETCH5
-    FETCH4 --> TABLE
+    BTN -->|Refresh| FETCH1
+    FETCH1 --> TABLE
     
     STATE -.->|Store| CUST
-    STATE -.->|Update| SIM
+    STATE -.->|Update| GAUGE
     
     style INIT fill:#2d6cdf,color:#fff
     style SEL fill:#22c55e,color:#fff
-    style SIM fill:#f59e0b,color:#fff
+    style GAUGE fill:#f59e0b,color:#fff
     style CHART2 fill:#8b5cf6,color:#fff
+    style OPTIMIZE fill:#22c55e,color:#fff
 ```
 
 ## 🛠 Setup & Local Development
