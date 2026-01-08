@@ -215,9 +215,10 @@ function renderChart(features) {
       datasets: [{
         label: "Feature Importance",
         data: topFeatures.map(f => f.importance),
-        backgroundColor: "rgba(45, 108, 223, 0.6)",
-        borderColor: "rgba(45, 108, 223, 1)",
-        borderWidth: 1
+        backgroundColor: "rgba(59, 130, 246, 0.4)",
+        borderColor: "rgba(59, 130, 246, 1)",
+        borderWidth: 2,
+        borderRadius: 8
       }]
     },
     options: {
@@ -228,8 +229,8 @@ function renderChart(features) {
         legend: { display: false }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { color: "#a9b6d3" } },
-        y: { grid: { display: false }, ticks: { color: "#a9b6d3" } }
+        x: { grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#94a3b8", font: { weight: '600' } } },
+        y: { grid: { display: false }, ticks: { color: "#fff", font: { weight: '600' } } }
       }
     }
   });
@@ -237,10 +238,10 @@ function renderChart(features) {
 
 async function saveSettings() {
   const apiBase = getApiBase();
-  const slackEnabled = document.getElementById("slackEnabled").checked ? "true" : "false";
+  const slackEnable = document.getElementById("slackEnable").checked ? "true" : "false";
   if (settings) {
     settings.set("apiBase", apiBase);
-    settings.set("slackEnable", slackEnabled);
+    settings.set("slackEnable", slackEnable);
     await settings.saveAsync();
   }
   setStatus("Saved settings.");
@@ -319,7 +320,8 @@ async function triggerAction() {
     const tbody = document.querySelector("#regretTable tbody");
     const ids = [];
     for (let i = 0; i < Math.min(5, tbody.children.length); i++) {
-      const id = parseInt(tbody.children[i].children[0].textContent, 10);
+      let rawId = tbody.children[i].children[0].textContent || "";
+      const id = parseInt(rawId.replace("#", ""), 10);
       if (!Number.isNaN(id)) ids.push(id);
     }
     if (!ids.length) { setStatus("Refresh first."); return; }
