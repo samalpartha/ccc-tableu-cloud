@@ -68,6 +68,22 @@ async function init() {
       refreshListBtn.addEventListener("click", refreshTopRegret);
     }
 
+    // Bind Login Button (Popup Flow)
+    const loginBtn = document.getElementById("tableauLoginBtn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        const url = getApiBase() + "/auth/tableau/login";
+        window.open(url, "tableau_oauth", "width=600,height=700");
+      });
+    }
+
+    // Listen for popup closure
+    window.addEventListener("message", (event) => {
+      if (event.data === "login_success") {
+        checkAuthStatus();
+      }
+    });
+
     setStatus("Initialized with Tableau.");
     checkAuthStatus();
   } catch (e) {
@@ -80,8 +96,9 @@ async function init() {
     const loginBtn = document.getElementById("tableauLoginBtn");
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
-        // Redirect to backend auth flow
-        window.location.href = getApiBase() + "/auth/tableau/login";
+        // Pope-up flow fallback
+        const url = getApiBase() + "/auth/tableau/login";
+        window.open(url, "tableau_oauth", "width=600,height=700");
       });
     }
 

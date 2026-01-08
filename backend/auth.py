@@ -86,19 +86,34 @@ def callback(request: Request, response: Response, code: str, state: str):
         
         # Redirect back to the extension with success
         # We store the token in a secure HttpOnly cookie
-        frontend_url = f"{request.base_url}extension/index.html"
-        if "onrender.com" in frontend_url and frontend_url.startswith("http://"):
-            frontend_url = frontend_url.replace("http://", "https://", 1)
-            
-        resp = RedirectResponse(url=frontend_url)
+        resp = Response(
+            content=f"""
+            <html>
+                <body>
+                    <script>
+                        // Notify the parent window
+                        if (window.opener) {{
+                            window.opener.postMessage("login_success", "*");
+                            window.close();
+                        }} else {{
+                            document.body.innerHTML = "Login successful! You can close this tab.";
+                        }}
+                    </script>
+                    <h1>Login Successful</h1>
+                    <p>Closing window...</p>
+                </body>
+            </html>
+            """,
+            media_type="text/html"
+        )
         
         resp.set_cookie(
             key="tableau_auth",
             value=access_token,
             httponly=True,
-            secure=True, # Always secure in modern browsers/Render
-            samesite="lax",
-            max_age=3600 # 1 hour default
+            secure=True,
+            samesite="None",  # Critical for iframe/popup context in some browsers
+            max_age=3600
         )
         
         return resp
