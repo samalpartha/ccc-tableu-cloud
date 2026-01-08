@@ -4,6 +4,9 @@ import requests
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/auth/tableau", tags=["auth"])
 

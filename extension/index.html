@@ -25,14 +25,31 @@
 
     <!-- Configuration (Glass Container) -->
     <div class="card" style="margin-top: 0;">
-      <span class="lbl">Backend Configuration</span>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <input type="text" id="apiBase" class="inp" placeholder="API Base URL"
-          value="https://ccc-tableu-cloud.onrender.com">
-        <button id="saveConfig" class="btn secondary" style="padding: 14px;">Update</button>
-        <button id="resetApi" class="btn secondary"
-          style="padding: 14px; background: rgba(255,255,255,0.05);">Reset</button>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="lbl">Data Connection</span>
+        <div id="connectionStatus"
+          style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+          <span id="connDot"
+            style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary);"></span>
+          <span id="connText">Not Connected</span>
+        </div>
       </div>
+
+      <div style="margin-top: 12px; display: flex; gap: 12px; align-items: center;">
+        <button id="tableauLoginBtn" class="btn"
+          style="width: 100%; background: #E8762D; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <!-- Simple Tablet/Icon SVG -->
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          Sign in with Tableau
+        </button>
+      </div>
+
+      <!-- Hidden field to store API base for internal logic compatibility -->
+      <input type="hidden" id="apiBase" value="http://localhost:8004">
+
       <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="slackEnable" style="width: 18px; height: 18px; accent-color: var(--accent-primary);">
         <label for="slackEnable" style="font-size: 13px; font-weight: 600; cursor: pointer;">Enable Slack

@@ -65,12 +65,24 @@ async function init() {
     }
 
     setStatus("Initialized with Tableau.");
+    checkAuthStatus();
   } catch (e) {
     console.warn("Not running inside Tableau.", e);
     const errorMsg = e.message || e.toString();
     setStatus("Mode: Standalone (Local Dev)");
     document.getElementById("apiBase").value = "http://localhost:8004/";
+
+    // Bind Login Button
+    const loginBtn = document.getElementById("tableauLoginBtn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        // Redirect to backend auth flow
+        window.location.href = getApiBase() + "/auth/tableau/login";
+      });
+    }
+
     checkApiHealth();
+    checkAuthStatus();
     refreshTopRegret();
   }
   // Auto-load data regardless of mode
@@ -458,6 +470,7 @@ async function checkApiHealth() {
     // We use /metadata/features as a lightweight ping
     const res = await fetch(`${baseUrl}/metadata/features`, { signal: AbortSignal.timeout(5000) });
     if (res.ok) {
+      // If successful, update the hidden apiBase value if needed or just confirm connectivity
       diag.innerHTML = `● Backend API Online (${baseUrl.split('//')[1]})`;
       diag.style.color = "var(--success)";
     } else {
@@ -466,6 +479,35 @@ async function checkApiHealth() {
   } catch (e) {
     diag.innerHTML = `× API Connection Failed: ${e.message}`;
     diag.style.color = "var(--danger)";
+  }
+}
+
+async function checkAuthStatus() {
+  const connDot = document.getElementById("connDot");
+  const connText = document.getElementById("connText");
+  const loginBtn = document.getElementById("tableauLoginBtn");
+
+  try {
+    const baseUrl = getApiBase().replace(/\/$/, "");
+    const res = await fetch(`${baseUrl}/auth/tableau/me`);
+    const data = await res.json();
+
+    if (data.authenticated) {
+      connDot.style.background = "var(--success)";
+      connText.innerText = `Connected`;
+      connText.style.color = "var(--success)";
+      loginBtn.innerHTML = "✓ Signed In";
+      loginBtn.style.background = "rgba(16, 185, 129, 0.2)";
+      loginBtn.style.color = "var(--success)";
+      loginBtn.disabled = true;
+    } else {
+      connDot.style.background = "var(--text-secondary)";
+      connText.innerText = "Not Connected";
+    }
+  } catch (e) {
+    console.warn("Auth check failed:", e);
+    connDot.style.background = "var(--danger)";
+    connText.innerText = "Connection Error";
   }
 }
 
