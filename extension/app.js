@@ -15,8 +15,25 @@ async function init() {
     settings = tableau.extensions.settings;
 
     const defaultApi = "https://ccc-tableu-cloud.onrender.com";
-    document.getElementById("apiBase").value = settings.get("apiBase") || defaultApi;
+    let apiVal = settings.get("apiBase") || defaultApi;
+
+    // Auto-fix common typos (like the 'tablsu' typo discovered in user screenshots)
+    if (apiVal.includes("tablsu")) {
+      console.warn("Auto-fixing typo in API URL");
+      apiVal = apiVal.replace("tablsu", "tableu");
+    }
+
+    document.getElementById("apiBase").value = apiVal;
     document.getElementById("slackEnable").checked = (settings.get("slackEnable") || "false") === "true";
+
+    // Diagnostic: Tableau Connection
+    const diagTab = document.getElementById("diagTableau");
+    if (diagTab) {
+      diagTab.innerHTML = "● Connected to Tableau";
+      diagTab.style.color = "var(--success)";
+    }
+
+    checkApiHealth();
 
     // Display User Info
     const user = tableau.extensions.viewer;
@@ -56,15 +73,30 @@ async function onSelectionChange(event) {
       return;
     }
 
-    const data = marks.data[0];
-    console.log("Available columns:", data.columns.map(c => c.fieldName));
+    const cols = data.columns.map(c => c.fieldName);
+    console.log("Available columns:", cols);
 
-    const customerIdIndex = data.columns.findIndex(c => c.fieldName.toLowerCase().includes("customer"));
-    console.log("Customer ID index:", customerIdIndex);
+    // Robust matching: Look for 'customer', 'id', 'account', or 'uid'
+    const customerIdIndex = data.columns.findIndex(c => {
+      const name = c.fieldName.toLowerCase();
+      return name.includes("customer") || (name === "id") || name.includes("acc") || name.includes("uid");
+    });
+    console.log("Matched index:", customerIdIndex);
 
+    const diagSel = document.getElementById("diagSelection");
     if (customerIdIndex === -1) {
-      setStatus("Error: Customer ID column not found. Available: " + data.columns.map(c => c.fieldName).join(", "));
+      const errorMsg = `Error: No 'ID' column found. Available: ${cols.join(", ")}`;
+      setStatus(errorMsg);
+      if (diagSel) {
+        diagSel.innerHTML = "× Selection Error: ID column missing";
+        diagSel.style.color = "var(--danger)";
+      }
       return;
+    }
+
+    if (diagSel) {
+      diagSel.innerHTML = "● Selection Recognized";
+      diagSel.style.color = "var(--success)";
     }
 
     const customerId = data.data[0][customerIdIndex].value;
@@ -343,7 +375,15 @@ async function triggerAction() {
   }
 }
 
-document.getElementById("saveConfig").addEventListener("click", saveSettings);
+document.getElementById("saveConfig").addEventListener("click", () => {
+  saveSettings();
+  checkApiHealth();
+});
+document.getElementById("resetApi").addEventListener("click", () => {
+  document.getElementById("apiBase").value = "https://ccc-tableu-cloud.onrender.com";
+  saveSettings();
+  checkApiHealth();
+});
 document.getElementById("refreshBtn").addEventListener("click", refreshTopRegret);
 document.getElementById("slackBtn").addEventListener("click", triggerAction);
 document.getElementById("optimizeBtn").addEventListener("click", handleOptimize);
@@ -372,13 +412,6 @@ async function handleOptimize() {
         <span style="color: var(--muted); font-style: italic;">"${data.reasoning}"</span>
       `;
 
-      // Rerun simulation to update gauge
-      // We need to trigger the change events for the inputs if they are used by runSimulation
-      // But runSimulation in this app uses the specific sliders. 
-      // The simulate currently only shows sliders in the UI. 
-      // Wait, let's update runSimulation to reflect all context if needed.
-      // Actually, let's just show the recommendation and let them "Apply" it.
-
       setStatus("Optimal strategy identified!");
     } else {
       setStatus("No significant improvement found.");
@@ -386,6 +419,27 @@ async function handleOptimize() {
   } catch (e) {
     console.error("Optimization failed", e);
     setStatus("AI optimization failed.");
+  }
+}
+
+async function checkApiHealth() {
+  const diag = document.getElementById("diagApi");
+  if (!diag) return;
+
+  try {
+    const baseUrl = getApiBase().replace(/\/$/, "");
+    diag.innerHTML = `○ Connecting to ${baseUrl}...`;
+    // We use /metadata/features as a lightweight ping
+    const res = await fetch(`${baseUrl}/metadata/features`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      diag.innerHTML = `● Backend API Online (${baseUrl.split('//')[1]})`;
+      diag.style.color = "var(--success)";
+    } else {
+      throw new Error(`Status ${res.status}`);
+    }
+  } catch (e) {
+    diag.innerHTML = `× API Connection Failed: ${e.message}`;
+    diag.style.color = "var(--danger)";
   }
 }
 

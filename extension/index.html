@@ -30,6 +30,8 @@
         <input type="text" id="apiBase" class="inp" placeholder="API Base URL"
           value="https://ccc-tableu-cloud.onrender.com">
         <button id="saveConfig" class="btn secondary" style="padding: 14px;">Update</button>
+        <button id="resetApi" class="btn secondary"
+          style="padding: 14px; background: rgba(255,255,255,0.05);">Reset</button>
       </div>
       <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="slackEnable" style="width: 18px; height: 18px; accent-color: var(--accent-primary);">
@@ -39,11 +41,18 @@
     </div>
 
     <!-- Placeholder State -->
-    <div id="simPlaceholder" class="card" style="text-align: center; padding: 60px 20px;">
-      <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">📊</div>
+    <div id="simPlaceholder" class="card" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;">📡</div>
       <h2 style="margin: 0; font-weight: 700;">Ready for Analysis</h2>
-      <p style="color: var(--text-secondary); margin-top: 10px;">Select a customer in your Tableau dashboard to begin
-        the real-time retention simulation.</p>
+      <p style="color: var(--text-secondary); margin-top: 10px; font-size: 14px;">Select a customer in your Tableau
+        dashboard to begin.</p>
+
+      <div id="diagList"
+        style="text-align: left; max-width: 300px; margin: 24px auto 0; font-size: 13px; border-top: 1px solid var(--glass-border); padding-top: 16px;">
+        <div id="diagTableau" style="margin-bottom: 8px; color: var(--text-secondary);">○ Connected to Tableau</div>
+        <div id="diagApi" style="margin-bottom: 8px; color: var(--text-secondary);">○ Backend API Online</div>
+        <div id="diagSelection" style="color: var(--text-secondary);">○ Waiting for Selection...</div>
+      </div>
     </div>
 
     <!-- Active Analysis -->
