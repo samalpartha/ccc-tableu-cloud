@@ -35,14 +35,14 @@ async function init() {
     document.getElementById("ticketSlider").addEventListener("input", runSimulation);
 
     setStatus("Initialized with Tableau.");
-    // Auto-load data immediately on startup
-    refreshTopRegret();
   } catch (e) {
     console.warn("Not running inside Tableau.", e);
     const errorMsg = e.message || e.toString();
     setStatus("Mode: Standalone (" + errorMsg.substring(0, 40) + ")");
     document.getElementById("apiBase").value = "https://ccc-tableu-cloud.onrender.com";
   }
+  // Auto-load data regardless of mode
+  refreshTopRegret();
 }
 
 async function onSelectionChange(event) {

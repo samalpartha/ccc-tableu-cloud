@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: counterfactual-command-center
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8004
