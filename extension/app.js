@@ -91,6 +91,7 @@ async function analyzeCustomer(customerId) {
     // Show simulator
     document.getElementById("simulatorControls").style.display = "block";
     document.getElementById("simPlaceholder").style.display = "none";
+    document.getElementById("recommendationPanel").style.display = "block";
 
     // 1. Get detailed counterfactual
     const cfRes = await fetch(`${baseUrl}/counterfactual`, {
@@ -334,5 +335,47 @@ async function triggerAction() {
 document.getElementById("saveBtn").addEventListener("click", saveSettings);
 document.getElementById("refreshBtn").addEventListener("click", refreshTopRegret);
 document.getElementById("triggerBtn").addEventListener("click", triggerAction);
+document.getElementById("optimizeBtn").addEventListener("click", handleOptimize);
+
+async function handleOptimize() {
+  if (!currentCustomerData) return;
+  const customerId = parseInt(currentCustomerData.customer_id || currentCustomerData.Customer_Id || 0);
+  if (!customerId) return;
+
+  try {
+    setStatus("AI is calculating optimal strategy...");
+    const baseUrl = getApiBase().replace(/\/$/, "");
+    const res = await fetch(`${baseUrl}/recommend/${customerId}`);
+    const data = await res.json();
+
+    if (data.best_action !== "none") {
+      // Apply recommendation to UI
+      document.getElementById("actionType").value = data.best_action;
+      document.getElementById("timing").value = data.best_timing;
+
+      // Update recommendation text
+      const recText = document.getElementById("recommendationText");
+      recText.innerHTML = `
+        <strong>Strategy:</strong> ${data.best_action.replace("_", " ")} at day ${data.best_timing}.<br/>
+        <strong>Impact:</strong> Churn risk dropped by ${(data.improvement * 100).toFixed(1)}%.<br/>
+        <span style="color: var(--muted); font-style: italic;">"${data.reasoning}"</span>
+      `;
+
+      // Rerun simulation to update gauge
+      // We need to trigger the change events for the inputs if they are used by runSimulation
+      // But runSimulation in this app uses the specific sliders. 
+      // The simulate currently only shows sliders in the UI. 
+      // Wait, let's update runSimulation to reflect all context if needed.
+      // Actually, let's just show the recommendation and let them "Apply" it.
+
+      setStatus("Optimal strategy identified!");
+    } else {
+      setStatus("No significant improvement found.");
+    }
+  } catch (e) {
+    console.error("Optimization failed", e);
+    setStatus("AI optimization failed.");
+  }
+}
 
 init();

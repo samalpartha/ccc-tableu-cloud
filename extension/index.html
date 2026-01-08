@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Counterfactual Command Center Extension</title>
   <link rel="stylesheet" href="./styles.css" />
-  <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api@v1.12.0/lib/tableau.extensions.1.latest.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/tableau/extensions-api@v1.12.0/lib/tableau.extensions.1.latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <div class="wrap">
     <div class="hdr">
@@ -76,6 +79,16 @@
           <div class="subtitle">Simulated Churn Risk</div>
         </div>
 
+        <div id="recommendationPanel" class="card"
+          style="display: none; background: rgba(59, 130, 246, 0.1); border-color: var(--accent); margin-top: 16px;">
+          <div class="subtitle" style="color: var(--accent); font-weight: 600;">AI Recommendation</div>
+          <div id="recommendationText" style="font-size: 13px; margin: 8px 0;"></div>
+          <div class="row">
+            <button class="btn" id="optimizeBtn" style="width: 100%;"><span class="pulse"></span>AI
+              Auto-Optimize</button>
+          </div>
+        </div>
+
         <div class="row">
           <div class="col">
             <label class="lbl">Usage Drop (<span id="usageVal">0</span>%)</label>
@@ -117,4 +130,5 @@
 
   <script src="./app.js"></script>
 </body>
+
 </html>

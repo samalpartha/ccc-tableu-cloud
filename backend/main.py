@@ -11,7 +11,8 @@ from backend.schemas import (
     PredictRequest, PredictResponse,
     CounterfactualRequest, CounterfactualResponse,
     BatchCounterfactualRequest, SlackTriggerRequest,
-    MetadataResponse, ExplainResponse, FeatureImportance
+    MetadataResponse, ExplainResponse, FeatureImportance,
+    RecommendationResponse
 )
 from backend.model import load_model, predict_proba, get_feature_importance, FEATURE_COLS
 from backend.counterfactual import apply_counterfactual
@@ -177,3 +178,53 @@ def trigger_action(req: SlackTriggerRequest):
     if r.status_code >= 300:
         raise HTTPException(status_code=502, detail=f"Slack webhook failed: {r.status_code} {r.text[:200]}")
     return {"ok": True}
+
+@app.get("/recommend/{customer_id}", response_model=RecommendationResponse)
+def recommend_action(customer_id: int):
+    model = get_model()
+    base = get_base_df()
+    
+    row = base.loc[base["customer_id"] == customer_id]
+    if row.empty:
+        raise HTTPException(status_code=404, detail="customer_id not found")
+        
+    base_p = float(predict_proba(model, row)[0])
+    
+    best_risk = base_p
+    best_action = "none"
+    best_timing = 0
+    
+    actions = ["discount", "priority_support", "proactive_outreach"]
+    timings = [7, 14, 30]
+    
+    for action in actions:
+        for timing in timings:
+            cf_row = apply_counterfactual(row, timing, action)
+            cf_p = float(predict_proba(model, cf_row)[0])
+            if cf_p < best_risk:
+                best_risk = cf_p
+                best_action = action
+                best_timing = timing
+                
+    improvement = base_p - best_risk
+    
+    # Simple reasoning logic
+    reasoning = ""
+    if best_action == "proactive_outreach":
+        reasoning = "Usage patterns suggest a high response to high-touch engagement."
+    elif best_action == "priority_support":
+        reasoning = "Resolved support bottlenecks are the primary driver for retention."
+    elif best_action == "discount":
+        reasoning = "Price elasticity is high for this segment; a financial incentive is optimal."
+    else:
+        reasoning = "No intervention significantly improves the baseline risk."
+
+    return RecommendationResponse(
+        customer_id=customer_id,
+        base_risk=base_p,
+        best_action=best_action,
+        best_timing=best_timing,
+        new_risk=best_risk,
+        improvement=improvement,
+        reasoning=reasoning
+    )

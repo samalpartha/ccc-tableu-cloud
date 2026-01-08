@@ -54,3 +54,12 @@ class ExplainResponse(BaseModel):
     customer_id: int
     base_risk: float
     features: List[FeatureImportance] # Local importance/contributions
+
+class RecommendationResponse(BaseModel):
+    customer_id: int
+    base_risk: float
+    best_action: ActionType
+    best_timing: int
+    new_risk: float
+    improvement: float
+    reasoning: str
